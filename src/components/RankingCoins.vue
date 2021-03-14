@@ -9,50 +9,21 @@
       disable-pagination
       loading="true"
       loading-text="Loading"
-      class="elevation-1"
     >
-      <template v-slot:item.rankDiff1H="{ item }">
-        {{ item.rankPast1H }}
-        <v-chip
-          v-if="item.rankDiff1H > 0 || item.rankDiff1H < 0"
-          :color="getColor(item.rankDiff1H)"
-          dark
-        >
-          {{ rankDiffFormat(item.rankDiff1H) }}
-        </v-chip>
-      </template>
-
-      <template v-slot:item.rankDiff2H="{ item }">
-        {{ item.rankPast2H }}
-        <v-chip
-          v-if="item.rankDiff2H > 0 || item.rankDiff2H < 0"
-          :color="getColor(item.rankDiff2H)"
-          dark
-        >
-          {{ rankDiffFormat(item.rankDiff2H) }}
-        </v-chip>
-      </template>
-
-      <template v-slot:item.rankDiff4H="{ item }">
-        {{ item.rankPast4H }}
-        <v-chip
-          v-if="item.rankDiff4H > 0 || item.rankDiff4H < 0"
-          :color="getColor(item.rankDiff4H)"
-          dark
-        >
-          {{ rankDiffFormat(item.rankDiff4H) }}
-        </v-chip>
-      </template>
-
-      <template v-slot:item.rankDiff8H="{ item }">
-        {{ item.rankPast8H }}
-        <v-chip
-          v-if="item.rankDiff8H > 0 || item.rankDiff8H < 0"
-          :color="getColor(item.rankDiff8H)"
-          dark
-        >
-          {{ rankDiffFormat(item.rankDiff8H) }}
-        </v-chip>
+      <template v-for="h in headers" v-slot:[`item.${h.value}`]="{ item }">
+        <div :key="h.value">
+          <div v-if="item[h.pastRankPropName]">
+            {{ item[h.pastRankPropName] }}
+            <v-chip
+              v-if="item[h.value] > 0 || item[h.value] < 0"
+              :color="getColor(item[h.value])"
+              dark
+            >
+              {{ rankDiffFormat(item[h.value]) }}
+            </v-chip>
+          </div>
+          <div v-else>{{ item[h.value] }}</div>
+        </div>
       </template>
     </v-data-table>
   </v-app>
@@ -64,45 +35,71 @@ export default {
   data: () => ({
     lastUpdatedAt: "",
     coinsRank: [],
-    headers: [
-      {
-        text: "Coins Name",
-        align: "start",
-        value: "name",
-      },
-      { text: "Symbol", value: "symbol" },
-      { text: "Current", value: "currentRank" },
-      { text: "1H", value: "rankDiff1H" },
-      { text: "2H", value: "rankDiff2H" },
-      { text: "4H", value: "rankDiff4H" },
-      { text: "8H", value: "rankDiff8H" },
-    ],
+    headers: [],
   }),
   methods: {
-    getCoinsRank() {
+    getCoinsRanking() {
       axios
         .get("https://api.ippo.space/coins-ranking")
         .then((response) => {
-          this.lastUpdatedAt = new Date(
-            response.data.lastUpdatedAt
-          ).toLocaleString();
-          this.coinsRank = response.data.coinsRank;
+          this.buildCoinsRankArray(response.data.coinsRank);
+          this.buildTableHeaders(response.data.coinsRank[0].rankHistory);
         })
         .catch(function (error) {
           alert(error);
         });
     },
+
+    buildCoinsRankArray(coinsRank) {
+      coinsRank.forEach((cr) => {
+        const coinRank = {
+          id: cr.coinId,
+          symbol: cr.symbol,
+          name: cr.name,
+          currentRank: cr.currentRank,
+        };
+
+        cr.rankHistory.forEach((rh) => {
+          const pastRankPropName = rh.pastHours + "HRank";
+          const diffCurrentRankPropName = rh.pastHours + "HDiffCurrentRank";
+
+          coinRank[pastRankPropName] = rh.rank;
+          coinRank[diffCurrentRankPropName] = rh.diffCurrentRank;
+        });
+
+        this.coinsRank.push(coinRank);
+      });
+    },
+
+    buildTableHeaders(rankHistory) {
+      this.headers.push({ text: "Coins Name", value: "name" });
+      this.headers.push({ text: "Symbol", value: "symbol" });
+      this.headers.push({ text: "Current", value: "currentRank" });
+
+      rankHistory.forEach((rh) => {
+        const diffCurrentRankPropName = rh.pastHours + "HDiffCurrentRank";
+        const pastRankPropName = rh.pastHours + "HRank";
+
+        this.headers.push({
+          text: rh.pastHours,
+          value: diffCurrentRankPropName,
+          pastRankPropName: pastRankPropName,
+        });
+      });
+    },
+
     getColor(rankDiff) {
       if (rankDiff > 0) return "green";
       else if (rankDiff < 0) return "red";
     },
+
     rankDiffFormat(rankDiff) {
       if (rankDiff < 0) return rankDiff;
       if (rankDiff > 0) return "+".concat(rankDiff);
     },
   },
   mounted() {
-    this.getCoinsRank();
+    this.getCoinsRanking();
   },
 };
 </script>
