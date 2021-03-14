@@ -81,7 +81,7 @@ export default {
         const pastRankPropName = rh.pastHours + "HRank";
 
         this.headers.push({
-          text: rh.pastHours,
+          text: rh.pastHours + "H",
           value: diffCurrentRankPropName,
           pastRankPropName: pastRankPropName,
         });
