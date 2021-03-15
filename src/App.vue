@@ -1,15 +1,17 @@
 <template>
   <v-app>
     <v-app-bar color="deep-orange" dark>
-      <v-toolbar-title>Ippo.Space</v-toolbar-title>
-      <v-spacer></v-spacer>
-      <v-btn icon>
-        <!-- <v-icon>mdi-magnify</v-icon> -->
-      </v-btn>
+      <v-toolbar-title> Ippo.Space 👨‍🚀🚀🌝</v-toolbar-title>
     </v-app-bar>
     <v-main>
       <RankingCoins />
     </v-main>
+
+    <v-footer class="font-weight-small" color="deep-orange" dark>
+      <v-col class="text-center">
+        {{ new Date().getFullYear() }} — <strong>Ippo.Space</strong>
+      </v-col>
+    </v-footer>
   </v-app>
 </template>
 

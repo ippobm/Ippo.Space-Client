@@ -4,9 +4,7 @@
       :headers="headers"
       :items="coinsRank"
       item-key="coinId"
-      hide-default-footer
-      disable-filtering
-      disable-pagination
+      items-per-page="50"
       loading="true"
       loading-text="Loading"
     >
